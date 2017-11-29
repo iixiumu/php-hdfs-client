@@ -1,0 +1,18 @@
+{
+    "name": "xiumu/php-hdfs-client",
+    "description": "php to hdfs via webhdfs restfull api",
+    "license": "MIT",
+    "require": {
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-4": {"xiumu\\": "src/"}
+    },
+    "authors": [
+        {
+            "name": "xiumu",
+            "email": "ixiumu@gmail.com"
+        }
+    ]
+}
