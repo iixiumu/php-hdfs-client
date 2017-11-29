@@ -2,6 +2,7 @@
     "name": "xiumu/php-hdfs-client",
     "description": "php to hdfs via webhdfs restfull api",
     "license": "MIT",
+    "type": "library",
     "require": {
     },
     "require-dev": {
