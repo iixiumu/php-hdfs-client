@@ -27,12 +27,49 @@ class HDFSClient {
     }
 	
 
-	//file info create delete
-	//dir  info create delete
+	//true  existed
+	//false not existed
+	//null  error
+	public function fileExisted($file) {
+		$op = 'GETFILESTATUS';
+		$ret = $this->doGet($op, $file);
+		if ($ret === false) {
+			return null;
+		}
+		$status = @json_decode($ret, true);
+		if ($status === null) {
+			return null;
+		}
+		// var_dump($status);
+		if (array_key_exists('FileStatus', $status)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	//length
+	//false not existed
+	//null  error
+	public function fileSize($file) {
+		$op = 'GETFILESTATUS';
+		$ret = $this->doGet($op, $file);
+		if ($ret === false) {
+			return null;
+		}
+		$status = @json_decode($ret, true);
+		if ($status === null) {
+			return null;
+		}
+		// var_dump($status);
+		if (array_key_exists('FileStatus', $status) and array_key_exists('length', $status['FileStatus'])) {
+			return intval($status['FileStatus']['length']);
+		} else {
+			return null;
+		}
+	}
 	public function fileInfo($file) {
 		$op = 'GETFILESTATUS';
 		return $this->doGet($op, $file);
-
 	}
 	public function dirInfo($dir) {
 		$op = 'GETFILESTATUS';
@@ -74,11 +111,14 @@ class HDFSClient {
 	}
 	public function putFileToRemote($file, $remoteFile) {
 		$op = 'CREATE';
-		$fp = fopen($file, 'r');
-		if ($fp === false) {
-			return false;
-		}
-		$ret  = $this->doPut($op, $remoteFile, $fp);
+		// $fp = fopen($file, 'r');
+		// if ($fp === false) {
+		// 	return false;
+		// }
+		$file = new \CurlFile($file);
+		$data['file'] = $file;
+		$ret  = $this->doPut($op, $remoteFile, $data);
+		// var_dump($ret);
 		if ($ret === false) {
 			return false;
 		}
@@ -87,12 +127,12 @@ class HDFSClient {
 			return false;
 		}
 		var_dump($match[0]);
-		$ret  = $this->doPut($op, $remoteFile, $fp, $match[0]);
-		fclose($fp);
+		$ret  = $this->doPut($op, $remoteFile, $data, $match[0]);
+		// fclose($fp);
 		return $ret;
 	}
 
-	public function doGet($op, $path, $header = false, $fp = null) {
+	private function doGet($op, $path, $header = false, $fp = null) {
 		foreach ($this->request_hosts as $host) {
 			$url = sprintf($this->request_rul, $host, $this->request_port, $path, $op, $this->hdfs_user);
 			$ret = \xiumu\HttpClient::doGet($url, $header, $fp);
@@ -104,15 +144,15 @@ class HDFSClient {
 		}
 		return false;
 	}
-	public function doPut($op, $path, $fp = null, $url = null) {
+	private function doPut($op, $path, $data = null, $url = null) {
 		if ($url !== null) {
-			$ret = \xiumu\HttpClient::doPut($url, $fp);
+			$ret = \xiumu\HttpClient::doPut($url, $data);
 			return $ret;
 		}
 		foreach ($this->request_hosts as $host) {
 			$url = sprintf($this->request_rul, $host, $this->request_port, $path, $op, $this->hdfs_user);
 			$url .= '&overwrite=true';
-			$ret = \xiumu\HttpClient::doPut($url, $fp);
+			$ret = \xiumu\HttpClient::doPut($url, $data);
 			if ($ret === false) {
 				continue;
 			} else {
